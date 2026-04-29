@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anket Bilgi Sistemi</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fda4af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='11' width='18' height='11' rx='2' ry='2'></rect><path d='M7 11V7a5 5 0 0 1 10 0v4'></path></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0d0810;
+      --bg-secondary: #130c18;
+      --glass-bg: rgba(30, 14, 36, 0.72);
+      --glass-border: rgba(251, 113, 133, 0.15);
+      --glass-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(251, 113, 133, 0.08);
+      --text-primary: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.45);
+      --accent: #fb7185;
+      --accent-deep: #f43f5e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      overflow: hidden;
+      font-family: "DM Sans", sans-serif;
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    .app {
+      position: relative;
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(244, 63, 94, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 85% 100%, rgba(159, 18, 57, 0.14) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 60% at 10% 60%, rgba(251, 113, 133, 0.07) 0%, transparent 50%),
+        linear-gradient(160deg, #0d0810 0%, #130c18 45%, #0f0812 100%);
+    }
+
+    .bg-overlay::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      border-radius: 28px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      color: #fff;
+      font-family: "DM Sans", sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .input-field::placeholder {
+      color: rgba(255, 255, 255, 0.25);
+    }
+
+    .input-field:focus {
+      border-color: rgba(251, 113, 133, 0.5);
+      background: rgba(251, 113, 133, 0.06);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-family: "DM Sans", sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(244, 63, 94, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      transition: box-shadow 0.2s, transform 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 28px rgba(244, 63, 94, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .font-display {
+      font-family: "Cormorant Garamond", serif;
+    }
+
+    .font-body {
+      font-family: "DM Sans", sans-serif;
+    }
+
+    .page {
+      position: absolute;
+      width: 100%;
+      max-width: 28rem;
+      opacity: 0;
+      transform: translateY(20px);
+      filter: blur(6px);
+      transition: all 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .page.active {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+      pointer-events: auto;
+    }
+
+    .page.exit {
+      opacity: 0;
+      transform: translateY(-20px);
+      filter: blur(6px);
+      transition: all 0.35s;
+    }
+
+    /* Floating Hearts */
+    .hearts-bg {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+      display: none;
+    }
+
+    .heart-float {
+      position: absolute;
+      bottom: -10%;
+      opacity: 0;
+      animation: floatUp var(--duration, 14s) ease-in infinite;
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(0) rotate(0deg) scale(0.5);
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 0.5;
+      }
+
+      80% {
+        opacity: 0.3;
+      }
+
+      100% {
+        transform: translateY(-110vh) rotate(25deg) scale(1.3);
+        opacity: 0;
+      }
+    }
+
+    /* Animations */
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.08);
+      }
+    }
+
+    @keyframes rotate {
+
+      0%,
+      100% {
+        transform: rotate(0deg) scale(1);
+      }
+
+      25% {
+        transform: rotate(12deg) scale(1.06);
+      }
+
+      75% {
+        transform: rotate(-12deg) scale(1.06);
+      }
+    }
+
+    @keyframes heartbeat {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.12);
+      }
+    }
+
+    .animate-pulse {
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    .animate-rotate {
+      animation: rotate 3.5s ease-in-out infinite;
+    }
+
+    .animate-heartbeat {
+      animation: heartbeat 2s ease-in-out infinite;
+    }
+
+    /* Survey option buttons */
+    .survey-opt {
+      width: 100%;
+      text-align: left;
+      padding: 0.875rem 1.25rem;
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .survey-opt:hover {
+      transform: scale(1.02);
+      background: rgba(251, 113, 133, 0.15);
+    }
+
+    /* Progress dots */
+    .progress-dot {
+      height: 6px;
+      border-radius: 9999px;
+      background: #fb7185;
+      transition: all 0.3s;
+    }
+
+    /* Footer */
+    .footer {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .footer p {
+      font-family: "Cormorant Garamond", serif;
+      font-style: italic;
+      font-size: 0.625rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Confetti canvas */
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* Story text */
+    .story-text {
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.65);
+      line-height: 1.6;
+    }
+
+    /* No button */
+    .no-btn {
+      position: relative;
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.75rem 1.5rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: "DM Sans", sans-serif;
+    }
+
+    .no-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.6);
+      transform: translateY(-1px);
+    }
+
+    /* Utility classes */
+    .text-rose-300 {
+      color: #fda4af;
+    }
+
+    .text-rose-400 {
+      color: #fb7185;
+    }
+
+    .text-white {
+      color: #fff;
+    }
+
+    .text-white\/40 {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .text-white\/50 {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .text-white\/55 {
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .text-white\/60 {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .text-white\/65 {
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    .text-white\/80 {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .bg-white\/5 {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .bg-white\/10 {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .bg-rose-500\/15 {
+      background: rgba(244, 63, 94, 0.15);
+    }
+
+    .bg-rose-500\/20 {
+      background: rgba(244, 63, 94, 0.2);
+    }
+
+    .border-white\/10 {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .border-white\/20 {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .border-rose-400\/30 {
+      border-color: rgba(251, 113, 133, 0.3);
+    }
+
+    .ring-2 {
+      box-shadow: 0 0 0 2px;
+    }
+
+    .ring-1 {
+      box-shadow: 0 0 0 1px;
+    }
+
+    .ring-rose-400\/30 {
+      --tw-ring-color: rgba(251, 113, 133, 0.3);
+    }
+
+    .ring-rose-400\/20 {
+      --tw-ring-color: rgba(251, 113, 133, 0.2);
+    }
+
+    .drop-shadow-lg {
+      filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.3));
+    }
+
+    .drop-shadow-xl {
+      filter: drop-shadow(0 25px 25px rgba(0, 0, 0, 0.4));
+    }
+
+    .drop-shadow {
+      filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.3));
+    }
+
+    .space-y-2>*+* {
+      margin-top: 0.5rem;
+    }
+
+    .space-y-3>*+* {
+      margin-top: 0.75rem;
+    }
+
+    .space-y-4>*+* {
+      margin-top: 1rem;
+    }
+
+    .space-y-6>*+* {
+      margin-top: 1.5rem;
+    }
+
+    .space-y-8>*+* {
+      margin-top: 2rem;
+    }
+
+    .space-y-10>*+* {
+      margin-top: 2.5rem;
+    }
+
+    .flex {
+      display: flex;
+    }
+
+    .flex-col {
+      flex-direction: column;
+    }
+
+    .items-center {
+      align-items: center;
+    }
+
+    .justify-center {
+      justify-content: center;
+    }
+
+    .justify-between {
+      justify-content: space-between;
+    }
+
+    .gap-1\.5 {
+      gap: 0.375rem;
+    }
+
+    .gap-2 {
+      gap: 0.5rem;
+    }
+
+    .w-full {
+      width: 100%;
+    }
+
+    .w-14 {
+      width: 3.5rem;
+    }
+
+    .w-16 {
+      width: 4rem;
+    }
+
+    .w-20 {
+      width: 5rem;
+    }
+
+    .max-w-sm {
+      max-width: 24rem;
+    }
+
+    .max-w-xs {
+      max-width: 20rem;
+    }
+
+    .h-14 {
+      height: 3.5rem;
+    }
+
+    .h-16 {
+      height: 4rem;
+    }
+
+    .h-20 {
+      height: 5rem;
+    }
+
+    .h-12 {
+      height: 3rem;
+    }
+
+    .h-1\.5 {
+      height: 6px;
+    }
+
+    .p-10 {
+      padding: 2.5rem;
+    }
+
+    .py-3 {
+      padding-top: 0.75rem;
+      padding-bottom: 0.75rem;
+    }
+
+    .py-4 {
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+    }
+
+    .px-5 {
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+    }
+
+    .py-3\.5 {
+      padding-top: 0.875rem;
+      padding-bottom: 0.875rem;
+    }
+
+    .rounded-2xl {
+      border-radius: 1rem;
+    }
+
+    .rounded-xl {
+      border-radius: 0.75rem;
+    }
+
+    .rounded-full {
+      border-radius: 9999px;
+    }
+
+    .text-xs {
+      font-size: 0.75rem;
+    }
+
+    .text-sm {
+      font-size: 0.875rem;
+    }
+
+    .text-lg {
+      font-size: 1.125rem;
+    }
+
+    .text-xl {
+      font-size: 1.25rem;
+    }
+
+    .text-2xl {
+      font-size: 1.5rem;
+    }
+
+    .text-3xl {
+      font-size: 1.875rem;
+    }
+
+    .text-4xl {
+      font-size: 2.25rem;
+    }
+
+    .font-semibold {
+      font-weight: 600;
+    }
+
+    .font-bold {
+      font-weight: 700;
+    }
+
+    .tracking-tight {
+      letter-spacing: -0.025em;
+    }
+
+    .tracking-widest {
+      letter-spacing: 0.1em;
+    }
+
+    .leading-snug {
+      line-height: 1.375;
+    }
+
+    .leading-relaxed {
+      line-height: 1.625;
+    }
+
+    .uppercase {
+      text-transform: uppercase;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-left {
+      text-align: left;
+    }
+
+    .mb-2 {
+      margin-bottom: 0.5rem;
+    }
+
+    .mb-6 {
+      margin-bottom: 1.5rem;
+    }
+
+    .pt-2 {
+      padding-top: 0.5rem;
+    }
+
+    .pt-4 {
+      padding-top: 1rem;
+    }
+
+    .mt-auto {
+      margin-top: auto;
+    }
+
+    .inline-flex {
+      display: inline-flex;
+    }
+
+    .relative {
+      position: relative;
+    }
+
+    .absolute {
+      position: absolute;
+    }
+
+    .inset-0 {
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+
+    .overflow-hidden {
+      overflow: hidden;
+    }
+
+    .overflow-visible {
+      overflow: visible;
+    }
+
+    .pointer-events-none {
+      pointer-events: none;
+    }
+
+    .cursor-default {
+      cursor: default;
+    }
+
+    .select-none {
+      user-select: none;
+    }
+
+    .touch-none {
+      touch-action: none;
+    }
+
+    .z-0 {
+      z-index: 0;
+    }
+
+    .z-10 {
+      z-index: 10;
+    }
+
+    .z-100 {
+      z-index: 100;
+    }
+
+    .min-h-\[440px\] {
+      min-height: 440px;
+    }
+
+    .block {
+      display: block;
+    }
+
+    .from-transparent {
+      --tw-gradient-from: transparent;
+    }
+
+    .via-rose-400\/40 {
+      --tw-gradient-via: rgba(251, 113, 133, 0.4);
+    }
+
+    .to-transparent {
+      --tw-gradient-to: transparent;
+    }
+
+    .bg-gradient-to-r {
+      background-image: linear-gradient(to right, var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to));
+    }
+
+    .h-px {
+      height: 1px;
+    }
+
+    .w-16 {
+      width: 4rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="bg-overlay"></div>
+    <canvas id="confetti-canvas"></canvas>
+    <div class="hearts-bg" id="hearts-bg"></div>
+
+    <!-- LOGIN PAGE -->
+    <div class="page glass-card p-10 space-y-8" id="page-login">
+      <div class="text-center space-y-3">
+        <div
+          class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 border border-white/20 mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="#fda4af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <h1 class="text-2xl font-display font-semibold text-white tracking-tight">Sistem Girişi</h1>
+        <p class="text-sm text-white/40 font-body">Yetkili kullanıcılar için</p>
+      </div>
+
+      <form id="login-form" class="space-y-4">
+        <div class="space-y-3">
+          <input type="text" id="username" placeholder="Kullanıcı adı" class="input-field" autocomplete="off">
+          <input type="password" id="password" placeholder="Şifre" class="input-field">
+        </div>
+        <p id="login-error" class="text-rose-400 text-xs text-center" style="display: none;"></p>
+        <button type="submit" class="btn-primary w-full py-3 text-sm font-semibold">Giriş Yap</button>
+      </form>
+
+      <p class="text-center text-[11px] text-white/20 font-body leading-relaxed">
+        Yönetim bilgi sistemi — Yetkisiz erişim yasaktır
+      </p>
+    </div>
+
+    <!-- SURVEY PAGE -->
+    <div class="page glass-card p-10 space-y-8" id="page-survey" style="display: none;">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="#fda4af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+            <path d="M9 14l2 2 4-4"></path>
+          </svg>
+          <span class="text-xs font-body font-semibold uppercase tracking-widest text-rose-300">Anket</span>
+        </div>
+        <span class="text-xs text-white/30 font-body" id="survey-progress">1 / 5</span>
+      </div>
+
+      <div class="space-y-2">
+        <h2 class="text-lg font-display font-medium text-white leading-snug" id="survey-question"></h2>
+      </div>
+
+      <div class="space-y-3" id="survey-options"></div>
+
+      <div class="flex gap-1.5 justify-center pt-2" id="survey-dots"></div>
+    </div>
+
+    <!-- TRANSITION PAGE -->
+    <div class="page text-center space-y-4 px-6" id="page-transition" style="display: none;">
+      <div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fb7185"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-6">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <p class="text-3xl font-display font-semibold text-white" id="transition-text"></p>
+      <div class="flex justify-center gap-1 pt-4" id="transition-dots">
+        <div class="w-2 h-2 rounded-full bg-rose-400" style="opacity: 0.2; transform: scale(1);"></div>
+        <div class="w-2 h-2 rounded-full bg-rose-400" style="opacity: 0.2; transform: scale(1);"></div>
+        <div class="w-2 h-2 rounded-full bg-rose-400" style="opacity: 0.2; transform: scale(1);"></div>
+      </div>
+    </div>
+
+    <!-- READY PAGE -->
+    <div class="page w-full max-w-xs text-center space-y-10" id="page-ready" style="display: none;">
+      <div class="animate-pulse">
+        <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="#fb7185"
+          class="mx-auto drop-shadow-lg">
+          <path
+            d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6-8h-1V7A5 5 0 1 0 7 7v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2zM9 7a3 3 0 1 1 6 0v2H9V7z" />
+        </svg>
+      </div>
+      <div class="space-y-3">
+        <h2 class="text-4xl font-display font-semibold text-white">Hazır mısın?</h2>
+        <p class="text-white/40 font-body text-sm">Sana özel bir şey var…</p>
+      </div>
+      <button class="btn-primary w-full py-4 text-lg font-semibold font-display" id="btn-ready">Hazırım ✨</button>
+    </div>
+
+    <!-- CONFESSION WELCOME -->
+    <div class="page glass-card p-10 text-center space-y-8 flex flex-col items-center" id="page-confession-welcome"
+      style="display: none;">
+      <div
+        class="w-20 h-20 rounded-full bg-rose-500/20 flex items-center justify-center ring-2 ring-rose-400/30 animate-heartbeat">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="#fb7185"
+          class="drop-shadow">
+          <path
+            d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6-8h-1V7A5 5 0 1 0 7 7v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2zM9 7a3 3 0 1 1 6 0v2H9V7z" />
+        </svg>
+      </div>
+
+      <div class="space-y-3">
+        <h1 class="text-3xl font-display font-semibold text-white leading-tight">
+          Sana en samimi <br>
+          <span class="text-rose-400">duygularımla…</span>
+        </h1>
+        <p class="text-white/50 font-body text-sm leading-relaxed">
+          Bu uygulamayı senin için özel olarak kodladım.
+          İçimdeki her şeyi seninle paylaşmak istedim.
+        </p>
+      </div>
+
+      <button
+        class="btn-primary w-full py-4 flex items-center justify-center gap-2 font-display text-base font-semibold"
+        id="btn-start-reading">
+        Okumaya Başla <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </div>
+
+    <!-- CONFESSION STORY -->
+    <div class="page glass-card p-10 space-y-6 flex flex-col items-center text-center min-h-[440px]"
+      id="page-confession-story" style="display: none;">
+      <div class="w-16 h-16 rounded-2xl bg-rose-500/15 flex items-center justify-center ring-1 ring-rose-400/20"
+        id="story-icon"></div>
+
+      <h2 class="text-xl font-display font-semibold text-rose-300" id="story-title"></h2>
+
+      <p class="text-white/65 font-body text-sm leading-relaxed flex-1 story-text" id="story-text"></p>
+
+      <div class="w-full flex items-center justify-between pt-4 mt-auto">
+        <div class="flex gap-1.5" id="story-dots"></div>
+        <button
+          class="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-rose-300"
+          id="btn-next-story">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- CONFESSION QUESTION -->
+    <div class="page glass-card p-10 text-center space-y-8 flex flex-col items-center overflow-visible"
+      id="page-confession-question" style="display: none;">
+      <div class="animate-rotate">
+        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="#fb7185"
+          class="drop-shadow-xl">
+          <path
+            d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6-8h-1V7A5 5 0 1 0 7 7v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2zM9 7a3 3 0 1 1 6 0v2H9V7z" />
+        </svg>
+      </div>
+
+      <div class="space-y-4">
+        <p class="text-white/50 font-body text-sm uppercase tracking-widest">Gezegenin en güzel yeri</p>
+        <h2 class="text-3xl font-display font-bold text-white leading-snug">
+          senin kalbin
+          <span class="block text-rose-400">Leyla.</span>
+        </h2>
+        <p class="text-white/55 font-body text-sm leading-relaxed">
+          Hayatımın kodlarını seninle birlikte yazmak istiyorum. <br>
+          Benimle olur musun?
+        </p>
+      </div>
+
+      <div class="w-full space-y-4 relative">
+        <button class="btn-primary w-full py-4 text-base font-display font-semibold" id="btn-yes">Evet, Seninleyim
+          ❤️</button>
+
+        <div class="flex items-center justify-center pt-2">
+          <button class="no-btn" id="btn-no">Belki başka zaman…</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFESSION REJECTED -->
+    <div class="page glass-card p-10 text-center space-y-8 flex flex-col items-center" id="page-confession-rejected" style="display: none;">
+      <div class="relative">
+        <div class="animate-pulse relative z-10">
+          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none"
+            stroke="#fb7185" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="drop-shadow-xl">
+            <path
+              d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6-8h-1V7A5 5 0 1 0 7 7v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2zM9 7a3 3 0 1 1 6 0v2H9V7z" />
+            <path d="M12 5l-2 4 4 4-4 4 2 4" stroke-dasharray="2 2" />
+          </svg>
+        </div>
+      </div>
+
+      <div class="space-y-4 pt-4">
+        <h1 class="text-2xl font-display font-semibold text-white leading-tight">
+          Tamam canın sağolsun, <br>
+          <span class="text-rose-400/70">ne istersen o olsun…</span>
+        </h1>
+        <p class="text-white/50 font-body text-sm leading-relaxed italic">
+          "Ama unutma, hem kalbimdesin hem de her zaman <br>
+          senin yanındayım. Kararına sonsuz saygı duyuyorum."
+        </p>
+      </div>
+
+      <div class="h-px w-16 bg-gradient-to-r from-transparent via-rose-400/20 to-transparent"></div>
+
+      <button
+        class="text-[11px] uppercase tracking-widest text-white/20 hover:text-white/40 transition-colors font-body btn-restart-alt">Başa
+        Dön</button>
+    </div>
+
+    <!-- CONFESSION SUCCESS -->
+    <div class="page glass-card p-10 text-center space-y-8 flex flex-col items-center" id="page-confession-success" style="display: none;">
+      <div class="relative">
+        <div class="absolute inset-0 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="#fb7185"
+            class="animate-pulse" style="opacity: 0.4;"></svg>
+        </div>
+        <div class="absolute inset-0 flex items-center justify-center"
+          style="animation: pulse 2s ease-in-out infinite 0.6s;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="#fb7185"
+            style="opacity: 0.4;"></svg>
+        </div>
+        <div class="absolute inset-0 flex items-center justify-center"
+          style="animation: pulse 2s ease-in-out infinite 1.2s;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="#fb7185"
+            style="opacity: 0.4;"></svg>
+        </div>
+        <div class="animate-heartbeat relative z-10">
+          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="#fb7185"
+            class="drop-shadow-xl">
+            <path
+              d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6-8h-1V7A5 5 0 1 0 7 7v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2zM9 7a3 3 0 1 1 6 0v2H9V7z" />
+          </svg>
+        </div>
+      </div>
+
+      <div class="space-y-3 pt-4">
+        <h1 class="text-3xl font-display font-bold text-white leading-tight">
+          Artık dünyanın en <br>
+          <span class="text-rose-400">şanslı insanıyım!</span>
+        </h1>
+        <p class="text-white/60 font-body text-sm leading-relaxed story-text">
+          Seni çok seviyorum. Yazdığım en anlamlı kod<br>
+          ve hayatımın en güzel anı bu oldu… ❤️
+        </p>
+      </div>
+
+      <div class="h-px w-16 bg-gradient-to-r from-transparent via-rose-400/40 to-transparent"></div>
+
+      <button
+        class="text-[11px] uppercase tracking-widest text-white/20 hover:text-white/40 transition-colors font-body btn-restart-main">Başa
+        Dön</button>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+    </div>
+  </div>
+
+  <script>
+    const SURVEY_QUESTIONS = [
+      { q: 'Okul yönetiminin iletişimi sizce yeterli mi?', opts: ['Evet, yeterli', 'Hayır, yetersiz'] },
+      { q: 'Bilişim altyapısı öğrenci ihtiyaçlarını karşılıyor mu?', opts: ['Evet, karşılıyor', 'Hayır, karşılamıyor'] },
+      { q: 'Kantin hizmetlerinden memnun musunuz?', opts: ['Memnunum', 'Memnun değilim'] },
+      { q: 'Sosyal & kültürel etkinlikler yeterli mi?', opts: ['Yeterli', 'Yetersiz'] },
+      { q: 'Okul temizliği ve bakımı sizce nasıl?', opts: ['İyi durumda', 'İyileştirilmeli'] },
+    ];
+
+    const STORY_CARDS = [
+      {
+        title: 'Her Şey Seninle Başladı…',
+        text: 'O notu senin kalemliğine bırakırken kalbim yerinden çıkacak gibiydi. Seninle geçirdiğim her an, her mesaj benim için dünyalara bedel.',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>',
+      },
+      {
+        title: 'Sessizce Büyüyen Hislerim',
+        text: 'Sana bakarken, gülüşünü izlerken hissettiğim şeyi tarif etmek çok zor. Sadece "arkadaşız" demek artık bana yetmiyor.',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#fb7185" stroke="#fb7185" stroke-width="2"><path d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6-8h-1V7A5 5 0 1 0 7 7v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2zM9 7a3 3 0 1 1 6 0v2H9V7z"/></svg>',
+      },
+      {
+        title: 'Seninleyken…',
+        text: 'Hayatımda olduğun için ne kadar şanslı olduğumu her gün yeniden anlıyorum. Sen gerçekten benim için her şeyden daha özelsin.',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#fb7185" stroke="#fb7185" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>',
+      },
+    ];
+
+    // ─── STATE ────────────────────────────────────────────────────────────────────
+    let phase = 'login';
+    let username = '';
+    let password = '';
+    let surveyIndex = 0;
+    let transitionStage = 0;
+    let storyIndex = 0;
+    let noPos = { x: 0, y: 0 };
+
+    // ─── DOM ELEMENTS ───────────────────────────────────────────────────────────
+    const pages = {
+      login: document.getElementById('page-login'),
+      survey: document.getElementById('page-survey'),
+      transition: document.getElementById('page-transition'),
+      ready: document.getElementById('page-ready'),
+      'confession-welcome': document.getElementById('page-confession-welcome'),
+      'confession-story': document.getElementById('page-confession-story'),
+      'confession-question': document.getElementById('page-confession-question'),
+      'confession-success': document.getElementById('page-confession-success'),
+      'confession-rejected': document.getElementById('page-confession-rejected'),
+    };
+
+    // ─── HELPERS ─────────────────────────────────────────────────────────────────
+    function showPage(pageId) {
+      Object.entries(pages).forEach(([id, el]) => {
+        if (!el) return;
+        if (id === pageId) {
+          // Sayfayı göster
+          el.style.display = id.startsWith('confession') ? 'flex' : 'block';
+          // Reflow (geçişin çalışması için şart)
+          el.offsetHeight; 
+          el.classList.add('active');
+          el.classList.remove('exit');
+        } else {
+          el.classList.add('exit');
+          el.classList.remove('active');
+          setTimeout(() => {
+            if (el.classList.contains('exit')) {
+              el.style.display = 'none';
+            }
+          }, 350);
+        }
+      });
+
+      // Show hearts on confession pages
+      const heartsBg = document.getElementById('hearts-bg');
+      if (pageId.startsWith('confession') || pageId === 'ready') {
+        heartsBg.style.display = 'block';
+      } else {
+        heartsBg.style.display = 'none';
+      }
+    }
+
+    const sendLog = async (event) => {
+      // 1. ÖNCE HEDEFİ TANIMLAYALIM (BURASI ÇOK KRİTİK!)
+      const myTopic = "birmesaj";
+
+      try {
+        // 2. IP ADRESİNİ AYRI BİR YERDE ALALIM (HATA VERİRSE SİSTEM DURMASIN)
+        let userIp = "Bilinmiyor";
+        try {
+          const ipRes = await fetch('https://api.ipify.org?format=json');
+          const ipData = await ipRes.json();
+          userIp = ipData.ip;
+        } catch (ipErr) {
+          console.log("IP Sinyali Alınamadı");
+        }
+
+        // 3. MESAJI HAZIRLAYALIM
+        const time = new Date().toLocaleString('tr-TR');
+        let msg = "";
+        let emoji = "🔔";
+
+        if (event === 'login') {
+          msg = `🚀 GİRİŞ: Leyla sisteme sızdı! \n📍 IP: ${userIp} \n⏰ Saat: ${time}`;
+          emoji = "rocket";
+        } else if (event === 'success') {
+          msg = `❤️ ZAFER: Leyla 'EVET' dedi! \n📍 IP: ${userIp} \n🔥 Tarih yazıldı reis!`;
+          emoji = "heart,tada";
+        } else if (event === 'fail') {
+          msg = `⚠️ HAYIR: Leyla 'Hayır'ı denedi. \n📍 IP: ${userIp}`;
+          emoji = "broken_heart";
+        }
+
+        // 4. NTFY.SH'A MERMİYİ ATALIM (EN BASİT HALİYLE)
+        await fetch(`https://ntfy.sh/${myTopic}`, {
+          method: 'POST',
+          body: msg,
+          headers: {
+            'Title': 'Operasyon Merkezi Raporu',
+            'Tags': emoji
+          }
+        });
+
+        console.log("Sinyal merkeze ulaştı babuş!");
+      } catch (error) {
+        console.log("Genel bağlantı hatası!", error);
+      }
+    };
+
+    // ─── FLOATING HEARTS ────────────────────────────────────────────────────────
+    function createHearts() {
+      const container = document.getElementById('hearts-bg');
+      for (let i = 0; i < 18; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'heart-float';
+        heart.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="" height="" viewBox="0 0 24 24" fill="rgba(255,182,193,0.35)"><path d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6-8h-1V7A5 5 0 1 0 7 7v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2zM9 7a3 3 0 1 1 6 0v2H9V7z"/></svg>';
+
+        const size = 10 + Math.random() * 18;
+        const duration = 12 + Math.random() * 12;
+        const delay = Math.random() * 8;
+        const left = Math.random() * 100;
+
+        heart.style.left = left + '%';
+        heart.style.setProperty('--duration', duration + 's');
+        heart.style.animationDelay = delay + 's';
+
+        const svg = heart.querySelector('svg');
+        svg.setAttribute('width', size);
+        svg.setAttribute('height', size);
+
+        container.appendChild(heart);
+      }
+    }
+
+    // ─── CONFETTI ────────────────────────────────────────────────────────────────
+    function fireConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#fb7185', '#f43f5e', '#fda4af', '#fff1f2', '#ffffff'];
+
+      for (let i = 0; i < 120; i++) {
+        particles.push({
+          x: canvas.width / 2,
+          y: canvas.height * 0.6,
+          vx: (Math.random() - 0.5) * 10,
+          vy: (Math.random() - 0.8) * 10,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          size: Math.random() * 8 + 4,
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 10,
+        });
+      }
+
+      let frame = 0;
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.2;
+          p.rotation += p.rotationSpeed;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation * Math.PI / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+
+        frame++;
+        if (frame < 150) requestAnimationFrame(animate);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      animate();
+    }
+
+    // ─── LOGIN ───────────────────────────────────────────────────────────────────
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      username = document.getElementById('username').value.toLowerCase();
+      password = document.getElementById('password').value;
+
+      if (username === 'leyla' && password === 'gezegen21') {
+        await sendLog('login');
+        phase = 'survey';
+        initSurvey();
+        showPage('survey');
+      } else {
+        const err = document.getElementById('login-error');
+        err.textContent = 'Kullanıcı adı veya şifre hatalı.';
+        err.style.display = 'block';
+      }
+    });
+
+    // ─── SURVEY ──────────────────────────────────────────────────────────────────
+    function initSurvey() {
+      surveyIndex = 0;
+      renderSurvey();
+    }
+
+    function renderSurvey() {
+      document.getElementById('survey-progress').textContent = `${surveyIndex + 1} / ${SURVEY_QUESTIONS.length}`;
+      document.getElementById('survey-question').textContent = SURVEY_QUESTIONS[surveyIndex].q;
+
+      const optsContainer = document.getElementById('survey-options');
+      optsContainer.innerHTML = '';
+      SURVEY_QUESTIONS[surveyIndex].opts.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'survey-opt';
+        btn.textContent = opt;
+        btn.onclick = handleSurveyAnswer;
+        optsContainer.appendChild(btn);
+      });
+
+      const dotsContainer = document.getElementById('survey-dots');
+      dotsContainer.innerHTML = '';
+      SURVEY_QUESTIONS.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'progress-dot';
+        dot.style.width = i === surveyIndex ? '24px' : '6px';
+        dot.style.opacity = i <= surveyIndex ? '1' : '0.25';
+        dotsContainer.appendChild(dot);
+      });
+    }
+
+    function handleSurveyAnswer() {
+      if (surveyIndex < SURVEY_QUESTIONS.length - 1) {
+        surveyIndex++;
+        renderSurvey();
+      } else {
+        phase = 'transition';
+        startTransition();
+      }
+    }
+
+    // ─── TRANSITION ─────────────────────────────────────────────────────────────
+    const transitionLines = ['Veriler kaydedildi.', 'Teşekkür ederiz.', 'Son bir adım kaldı…'];
+
+    function startTransition() {
+      showPage('transition');
+      transitionStage = 0;
+      updateTransition();
+    }
+
+    function updateTransition() {
+      document.getElementById('transition-text').textContent = transitionLines[transitionStage];
+
+      const dots = document.querySelectorAll('#transition-dots > div');
+      dots.forEach((dot, i) => {
+        dot.style.opacity = i === transitionStage ? '1' : '0.2';
+        dot.style.transform = i === transitionStage ? 'scale(1.3)' : 'scale(1)';
+      });
+
+      if (transitionStage < 2) {
+        setTimeout(() => {
+          transitionStage++;
+          updateTransition();
+        }, 2200);
+      } else {
+        setTimeout(() => {
+          phase = 'ready';
+          showPage('ready');
+        }, 2200);
+      }
+    }
+
+    // ─── READY ───────────────────────────────────────────────────────────────────
+    document.getElementById('btn-ready').onclick = () => {
+      phase = 'confession';
+      showPage('confession-welcome');
+    };
+
+    // ─── CONFESSION WELCOME ─────────────────────────────────────────────────────
+    document.getElementById('btn-start-reading').onclick = () => {
+      showPage('confession-story');
+      renderStory();
+    };
+
+    // ─── STORY ───────────────────────────────────────────────────────────────────
+    function renderStory() {
+      storyIndex = 0;
+      updateStory();
+    }
+
+    function updateStory() {
+      const card = STORY_CARDS[storyIndex];
+      document.getElementById('story-icon').innerHTML = card.icon;
+      document.getElementById('story-title').textContent = card.title;
+      document.getElementById('story-text').textContent = `"${card.text}"`;
+
+      const dotsContainer = document.getElementById('story-dots');
+      dotsContainer.innerHTML = '';
+      STORY_CARDS.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'progress-dot';
+        dot.style.width = i === storyIndex ? '20px' : '6px';
+        dot.style.opacity = i <= storyIndex ? '1' : '0.2';
+        dotsContainer.appendChild(dot);
+      });
+    }
+
+    document.getElementById('btn-next-story').onclick = () => {
+      if (storyIndex < STORY_CARDS.length - 1) {
+        storyIndex++;
+        updateStory();
+      } else {
+        showPage('confession-question');
+      }
+    };
+
+    // ─── QUESTION ───────────────────────────────────────────────────────────────
+    document.getElementById('btn-yes').onclick = () => {
+      showPage('confession-success');
+      sendLog('success'); // Arka planda gitsin, ekranı dondurmasın
+      fireConfetti();
+      setTimeout(fireConfetti, 500);
+      setTimeout(fireConfetti, 1000);
+    };
+
+    const btnNo = document.getElementById('btn-no');
+    btnNo.onclick = () => {
+      showPage('confession-rejected');
+      sendLog('fail'); // Arka planda gitsin
+    };
+
+    // ─── SUCCESS & REJECTED RESTART ─────────────────────────────────────────────
+    const restartApp = () => {
+      phase = 'login';
+      username = '';
+      password = '';
+      surveyIndex = 0;
+      transitionStage = 0;
+      storyIndex = 0;
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('login-error').style.display = 'none';
+      showPage('login');
+    };
+
+    document.querySelectorAll('.btn-restart-main, .btn-restart-alt').forEach(btn => {
+      btn.onclick = restartApp;
+    });
+
+
+
+
+    // ─── INIT ────────────────────────────────────────────────────────────────────
+    createHearts();
+    showPage('login');
+  </script>
+</body>
+
+</html>
